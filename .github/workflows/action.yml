@@ -30,8 +30,8 @@ jobs:
               with: 
                 aws_access_key: ${{ secrets.ACCESS_KEY }}
                 aws_secret_key: ${{ secrets.SECRET_ACCESS_KEY }}
-                application_name: awsapi
-                environment_name: Awsapi-env
+                application_name: awsapii
+                environment_name: Awsapii-env
                 version_label: ${{ github.run_id }}
                 region: eu-north-1
                 deployment_package: site.zip
