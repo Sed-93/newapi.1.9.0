@@ -1,6 +1,19 @@
 using System;
 using Xunit;
+public class EncryptionService
+{
+    public static string Encrypt(string text)
+    {
+        // Implementera din krypteringslogik här
+        return text; // Placeholder
+    }
 
+    public static string Decrypt(string text)
+    {
+        // Implementera din dekrypteringslogik här
+        return text; // Placeholder
+    }
+}
 public class EncryptionServiceTests
 {
     [Fact]
