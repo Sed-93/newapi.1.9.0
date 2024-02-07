@@ -1,74 +1,57 @@
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using System.Text;
 
-class EncryptionService
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+app.MapGet("/encrypt", (HttpContext context) =>
 {
-    static string Encrypt(string plainText)
+    string textToEncrypt = context.Request.Query["text"];
+    string encryptedText = Encrypt(textToEncrypt);
+    return Results.Text(encryptedText);
+});
+
+app.MapGet("/decrypt", (HttpContext context) =>
+{
+    string textToDecrypt = context.Request.Query["text"];
+    string? decryptedText = Decrypt(textToDecrypt);
+
+    if (decryptedText != null)
     {
-        byte[] plainTextBytes = Encoding.UTF8.GetBytes(plainText);
-        return Convert.ToBase64String(plainTextBytes);
+        return Results.Text(decryptedText);
     }
-
-    static string? Decrypt(string encryptedText)
+    else
     {
-        try
-        {
-            byte[] encryptedBytes = Convert.FromBase64String(encryptedText);
-            return Encoding.UTF8.GetString(encryptedBytes);
-        }
-        catch (FormatException)
-        {
-            return null; // Återge null om dekrypteringen misslyckas
-        }
+        return Results.Text("Decryption failed.");
     }
+});
 
-    static void Main()
+app.MapGet("/", () =>
+{
+    return Results.Text("Welcome to the Text Encrypter/Decrypter API!\n\n"
+                        + "Usage:\n"
+                        + "To encrypt: /encrypt?text=[your text]\n"
+                        + "To decrypt: /decrypt?text=[your text]\n");
+});
+
+app.Run();
+
+static string Encrypt(string plainText)
+{
+    byte[] plainTextBytes = Encoding.UTF8.GetBytes(plainText);
+    return Convert.ToBase64String(plainTextBytes);
+}
+
+static string? Decrypt(string encryptedText)
+{
+    try
     {
-        var host = new WebHostBuilder()
-            .UseKestrel()
-            .Configure(app =>
-            {
-                // Endpoint för att kryptera och dekryptera texten
-                app.Run(async (context) =>
-                {
-                    PathString path = context.Request.Path;
-                    if (path.StartsWithSegments("/encrypt"))
-                    {
-                        string textToEncrypt = context.Request.Query["text"];
-                        string encryptedText = Encrypt(textToEncrypt);
-
-                        context.Response.ContentType = "text/plain";
-                        await context.Response.WriteAsync(encryptedText);
-                    }
-                    else if (path.StartsWithSegments("/decrypt"))
-                    {
-                        string textToDecrypt = context.Request.Query["text"];
-                        string? decryptedText = Decrypt(textToDecrypt);
-
-                        context.Response.ContentType = "text/plain";
-                        if (decryptedText != null)
-                        {
-                            await context.Response.WriteAsync(decryptedText);
-                        }
-                        else
-                        {
-                            await context.Response.WriteAsync("Decryption failed.");
-                        }
-                    }
-                    else
-                    {
-                        context.Response.ContentType = "text/plain";
-                        await context.Response.WriteAsync("Welcome to the Text Encrypter/Decrypter API!\n\n"
-                                                          + "Usage:\n"
-                                                          + "To encrypt: /encrypt?text=[your text]\n"
-                                                          + "To decrypt: /decrypt?text=[your text]\n");
-                    }
-                });
-            })
-            .Build();
-
-        host.Run();
+        byte[] encryptedBytes = Convert.FromBase64String(encryptedText);
+        return Encoding.UTF8.GetString(encryptedBytes);
+    }
+    catch (FormatException)
+    {
+        return null; // Return null if decryption fails
     }
 }
