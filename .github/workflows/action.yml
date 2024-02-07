@@ -25,7 +25,7 @@ jobs:
             - name: create zip package
               run: cd site; zip ../site.zip *;
 
-            - name: Deploy toaws EB
+            - name: Deploy to AWS EB
               uses: einaregilsson/beanstalk-deploy@v21
               with: 
                 aws_access_key: ${{ secrets.ACCESS_KEY }}
