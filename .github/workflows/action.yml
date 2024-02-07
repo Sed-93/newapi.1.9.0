@@ -18,3 +18,20 @@ jobs:
               uses: actions/setup-dotnet@v3
               with:
                 dotnet-version: '6.0'
+            
+            - name: Build projckt
+              run: dotnet restore; dotnet publish -o site;
+
+            - name: create zip package
+              run: cd site; zip ../site.zip *;
+
+            - name: Deploy toaws EB
+              uses: einaregilsson/beanstalk-deploy@v21
+              with: 
+                aws_access_key: ${{ secrets.ACCESS_KEY }}
+                aws_secret_key: ${{ secrets.SECRET_ACCESS_KEY }}
+                application_name: webapi
+                environment_name: Webapi-env
+                version_label: ${{ github.run_id }}
+                region: eu-north-1
+                deployment_package: site.zip
