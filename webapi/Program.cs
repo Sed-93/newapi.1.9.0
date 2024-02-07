@@ -14,7 +14,7 @@ class EncryptionService
         return Convert.ToBase64String(plainTextBytes);
     }
 
-    static string Decrypt(string encryptedText)
+    static string? Decrypt(string encryptedText)
     {
         try
         {
