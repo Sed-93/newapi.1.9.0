@@ -1,44 +1,70 @@
-var builder = WebApplication.CreateBuilder(args);
+using System;
+using System.Text;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+class EncryptionService
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    static string key = "mySecretKey123"; // Lösenordet för att kryptera och dekryptera med Base64
 
-app.UseHttpsRedirection();
+    static string Encrypt(string plainText)
+    {
+        byte[] plainTextBytes = Encoding.UTF8.GetBytes(plainText);
+        return Convert.ToBase64String(plainTextBytes);
+    }
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    static string Decrypt(string encryptedText)
+    {
+        try
+        {
+            byte[] encryptedBytes = Convert.FromBase64String(encryptedText);
+            return Encoding.UTF8.GetString(encryptedBytes);
+        }
+        catch (FormatException)
+        {
+            return null; // Återge null om dekrypteringen misslyckas
+        }
+    }
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
+    static void Main(string[] args)
+    {
+        var host = new WebHostBuilder()
+            .UseKestrel()
+            .Configure(app =>
+            {
+                // Endpoint för att kryptera och dekryptera texten
+                app.Run(async (context) =>
+                {
+                    PathString path = context.Request.Path;
+                    if (path.StartsWithSegments("/encrypt"))
+                    {
+                        string textToEncrypt = context.Request.Query["text"];
+                        string encryptedText = Encrypt(textToEncrypt);
 
-app.Run();
+                        context.Response.ContentType = "text/plain";
+                        await context.Response.WriteAsync(encryptedText);
+                    }
+                    else if (path.StartsWithSegments("/decrypt"))
+                    {
+                        string textToDecrypt = context.Request.Query["text"];
+                        string decryptedText = Decrypt(textToDecrypt);
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+                        context.Response.ContentType = "text/plain";
+                        await context.Response.WriteAsync(decryptedText);
+                    }
+                    else
+                    {
+                        context.Response.ContentType = "text/plain";
+                        await context.Response.WriteAsync("Welcome to the Text Encrypter/Decrypter API!\n\n"
+                                                          + "Usage:\n"
+                                                          + "To encrypt: /encrypt?text=[your text]\n"
+                                                          + "To decrypt: /decrypt?text=[your text]\n");
+                    }
+                });
+            })
+            .Build();
+
+        host.Run();
+    }
 }
