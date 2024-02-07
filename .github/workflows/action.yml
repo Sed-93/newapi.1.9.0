@@ -41,6 +41,6 @@ jobs:
                 aws_secret_key: ${{ secrets.SECRET_ACCESS_KEY }}
                 application_name: awsapii
                 environment_name: Awsapii-env
-                version_label: ${{ github.run_id }}
+                version_label: ${{ steps.date.outputs.date }}             
                 region: eu-north-1
                 deployment_package: site.zip
