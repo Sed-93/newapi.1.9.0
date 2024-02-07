@@ -1,13 +1,10 @@
-using System;
-using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using System.Text;
 
 class EncryptionService
 {
-    static string key = "mySecretKey123"; // Lösenordet för att kryptera och dekryptera med Base64
-
     static string Encrypt(string plainText)
     {
         byte[] plainTextBytes = Encoding.UTF8.GetBytes(plainText);
@@ -27,7 +24,7 @@ class EncryptionService
         }
     }
 
-    static void Main(string[] args)
+    static void Main()
     {
         var host = new WebHostBuilder()
             .UseKestrel()
@@ -48,10 +45,17 @@ class EncryptionService
                     else if (path.StartsWithSegments("/decrypt"))
                     {
                         string textToDecrypt = context.Request.Query["text"];
-                        string decryptedText = Decrypt(textToDecrypt);
+                        string? decryptedText = Decrypt(textToDecrypt);
 
                         context.Response.ContentType = "text/plain";
-                        await context.Response.WriteAsync(decryptedText);
+                        if (decryptedText != null)
+                        {
+                            await context.Response.WriteAsync(decryptedText);
+                        }
+                        else
+                        {
+                            await context.Response.WriteAsync("Decryption failed.");
+                        }
                     }
                     else
                     {
